@@ -1,6 +1,7 @@
 package com.wildcodeschool.swapi.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wildcodeschool.swapi.model.People;
 import com.wildcodeschool.swapi.model.Planet;
@@ -27,7 +28,26 @@ public class SwapiController {
         Planet planetObject = null;
         // TODO : call the API and retrieve the planet
 
-        model.addAttribute("planetInfos", planetObject);
+        WebClient webClient = WebClient.create(SWAPI_URL);
+        Mono<String> call = webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/planets/{id}")
+                        .build(id))
+                .retrieve()
+                .bodyToMono(String.class);
+
+        String response = call.block();
+        Planet planetrep=null;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            planetrep = objectMapper.readValue(response, Planet.class);
+        } catch (JsonProcessingException e) {
+
+            e.printStackTrace();
+
+        }
+
+        model.addAttribute("planetInfos", planetrep);
 
         return "planet";
     }
